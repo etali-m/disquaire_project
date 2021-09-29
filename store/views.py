@@ -1,13 +1,16 @@
 #from django.shortcuts import render
 from django.http import HttpResponse
+from django.template import loader
+
+
 from .models import Album, Contact, Artist, Booking
 
 # Create your views here.
 def index(request):
     albums = Album.objects.filter(available=True).order_by('-created_at')[:3]
-    formatted_albums = ["<li>{}</li>".format(album.title) for album in albums]
-    message = """<ul>{}</ul>""".format("\n".join(formatted_albums))
-    return HttpResponse(message)
+    formatted_albums = ["<li>{}</li>".format(album.title) for album in albums] 
+    template = loader.get_template('store/index.html')
+    return HttpResponse(template.render(request=request))
 
 def listing(request):
     albums = Album.objects.filter(available=True)
