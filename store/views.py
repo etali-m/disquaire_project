@@ -2,6 +2,7 @@ from django.shortcuts import render, get_object_or_404
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 
 from .models import Album, Contact, Artist, Booking
+from .forms import ContactForm
 
 # Create your views here.
 def index(request):
@@ -52,11 +53,14 @@ def detail(request, album_id):
             'album_title': album.title
         }
         return render(request, 'store/merci.html', context)
+    else:
+        form = ContactForm()
     context = {
         'album_title': album.title,
         'artists_name': artists_name,
         'album_id': album.id,
-        'thumbnail': album.picture
+        'thumbnail': album.picture,
+        'form': form
     }
     return render(request, 'store/detail.html', context)
 
