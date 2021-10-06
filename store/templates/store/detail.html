@@ -18,11 +18,11 @@
   <form class="form-inline" action="{% url 'store:detail' album_id=album_id %}" method="post">
     {% csrf_token %}
 
-    <div class="form-group">
+    <div class="form-group {% if form.name.errors %}has-warning has-feedback{% endif %}">
       <label for="{{ form.name.id_for_label }}" class="control-label">Nom</label>
       {{ form.name }}
     </div>
-    <div class="form-group">
+    <div class="form-group {% if form.email.errors %}has-warning has-feedback{% endif %}">
       <label for="{{ form.name.id_for_label }}" class="control-label">E-mail</label>
       {{ form.email }}
     </div>
@@ -30,7 +30,15 @@
 
     <button type="submit" class="btn btn-success">Réserver</button>
   </form>
-
+  {% if errors %}
+    <div>
+      {% for key, error in errors %}
+      {% autoescape off %}
+        <span class="text-warning">{{ error }}</span> 
+      {% endautoescape %}
+      {% endfor %}
+    </div>
+  {% endif %}
 </div>
 
 
