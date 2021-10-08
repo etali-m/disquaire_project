@@ -1,5 +1,6 @@
 from django.shortcuts import render, get_object_or_404
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
+from django.db import transaction, IntegrityError
 
 from .models import Album, Contact, Artist, Booking
 from .forms import ContactForm, ParagraphErrorList
@@ -44,29 +45,34 @@ def detail(request, album_id):
             email = form.cleaned_data['email']
             name = form.cleaned_data['name']
 
-            contact = Contact.objects.filter(email=email)
-            if not contact.exists():
-                contact  = Contact.objects.create(
-                    email = email,
-                    name = name
-                )
-            album = get_object_or_404(Album, id=album_id)
-            booking = Booking.objects.create(
-                contact = contact, 
-                album = album
-            )
-            album.available = False
-            album.save()
-            context = {
-                'album_title': album.title
-            }
-            return render(request, 'store/merci.html', context)
-        else:
-            context['errors'] = form.errors.items()
+            try:
+                with transaction.atomic():
+                    contact = Contact.objects.filter(email=email)
+                    if not contact.exists():
+                        contact  = Contact.objects.create(
+                            email = email,
+                            name = name
+                        )
+                    else:
+                        contact = contact.first()
+                    album = get_object_or_404(Album, id=album_id)
+                    booking = Booking.objects.create(
+                        contact = contact, 
+                        album = album
+                    )
+                    album.available = False
+                    album.save()
+                    context = {
+                        'album_title': album.title
+                    }
+                    return render(request, 'store/merci.html', context)
+            except IntegrityError:
+                form.errors['internal'] = "Une erreur interne est apparue. Merci de recommencer votre requête."
     else:
         form = ContactForm()
     
     context['form'] = form
+    context['errors'] = form.errors.items()
     return render(request, 'store/detail.html', context)
 
 def search(request):
